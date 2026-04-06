@@ -242,7 +242,6 @@ const logsAgrupados = computed(() => {
             <div v-for="log in dados.registros" :key="log.TimeLog_Id" class="log-row">
                 <input type="text" :value="getProjectName(log.Project_Id)" readonly>
                 <input type="text" :value="getTaskName(log.Task_Id)" readonly>
-                <input type="text" :value="getTaskName(log.Task_Id)" readonly>
                 <input type="time" :value="log.Hours_Worked" readonly>
                 <input type="time" :value="log.Overtime" readonly>
                 <button @click="deleteLog(log.TimeLog_Id)">Delete</button>
