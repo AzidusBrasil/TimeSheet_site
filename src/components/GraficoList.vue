@@ -1,190 +1,211 @@
 <script setup>
-import {ref, onMounted, computed} from 'vue';
+import { ref, getCurrentInstance, onMounted, computed, watch } from 'vue';
 
 const log = ref([]);
 const project = ref([]);
+const taskList = ref([]); // Novo: Armazena as listas de tarefas
 const tasks = ref([]);
-const functions = ref([]);
 const users = ref([]);
 
-// 1. Esses guardam o que o usuário está mexendo na tela
+// 1. Estados dos filtros na tela
 const startDate = ref('');
 const endDate = ref('');
 const projectSelectId = ref(null);
+const taskListSelectId = ref(null); // Novo
 const userSelectId = ref(null);
 const taskSelectId = ref(null);
 
-// 2. Esses guardam o filtro EFETIVO (só mudam ao clicar no botão)
+// 2. Filtro EFETIVO
 const filtrosAplicados = ref({
     startDate: '',
     endDate: '',
     projectId: null,
+    taskListId: null, // Novo
     userId: null,
-    taskId: null // Adicionado para inicializar corretamente
+    taskId: null
 });
 
-const API_URL = 'http://127.0.0.1:8000';
+const app = getCurrentInstance()
+const API_URL = app.appContext.config.globalProperties.$API_URL;
 
-const getTimeLog = async() =>{
-    try{
+// --- Chamadas de API ---
+const getTimeLog = async() => {
+    try {
         const res = await fetch(`${API_URL}/TimeLog/`);
-        if (res.ok){
-            log.value = await res.json();
-        }
-    }catch(error){
-        console.error("Erro ao buscar registros:", error)
-    }
-}
-const getProjeto = async() =>{
-    try{
-        const res = await fetch(`${API_URL}/projects/`);
-        if (res.ok){
-            project.value = await res.json();
-        }
-    }catch (error){
-        console.error("Erro ao buscar registros:", error)
-    }
-}
-const getTask = async() =>{
-    try{
-        const res = await fetch(`${API_URL}/task/`);
-        if (res.ok){
-            tasks.value = await res.json();
-        }
-    }catch(error){
-        console.error("Erro ao buscar registros:", error)
-    }
-}
-const getUser = async() =>{
-    try{
-        const res = await fetch(`${API_URL}/user/`);
-        if (res.ok){
-            users.value = await res.json();
-        }
-    }catch(error){
-        console.error("Erro ao buscar registros:", error)
-    }
+        if (res.ok) log.value = await res.json();
+    } catch(error) { console.error("Erro logs:", error) }
 }
 
-function validarDatas() {
-  if (endDate.value && startDate.value > endDate.value) {
-    endDate.value = startDate.value
-  }
+const getProjeto = async() => {
+    try {
+        const res = await fetch(`${API_URL}/projects/`);
+        if (res.ok) project.value = await res.json();
+    } catch (error) { console.error("Erro projetos:", error) }
 }
+
+const getTaskList = async() => {
+    if (!projectSelectId.value) {
+        taskList.value = [];
+        return;
+    }
+    try {
+        const res = await fetch(`${API_URL}/taskList/project/${projectSelectId.value}`);
+        if (res.ok) taskList.value = await res.json();
+    } catch (error) { console.error("Erro tasklist:", error) }
+}
+
+const getTask = async() => {
+    // Se tiver TaskList selecionada, busca por ela, senão busca geral ou limpa
+    const url = taskListSelectId.value 
+        ? `${API_URL}/task/${taskListSelectId.value}`
+        : `${API_URL}/task/`;
+    try {
+        const res = await fetch(url);
+        if (res.ok) tasks.value = await res.json();
+    } catch(error) { console.error("Erro tasks:", error) }
+}
+
+const getUser = async() => {
+    try {
+        const res = await fetch(`${API_URL}/user/`);
+        if (res.ok) users.value = await res.json();
+    } catch(error) { console.error("Erro usuários:", error) }
+}
+
+// --- Watchers para Cascata ---
+watch(projectSelectId, () => {
+    taskListSelectId.value = null;
+    taskSelectId.value = null;
+    getTaskList();
+});
+
+watch(taskListSelectId, () => {
+    taskSelectId.value = null;
+    getTask();
+});
 
 onMounted(() => {
     getTimeLog();
     getProjeto();
     getTask();
+    getTaskList();
     getUser();
 });
-    
-// 3. ESSA FUNÇÃO ATIVA O FILTRO CLICANDO NO BOTÃO
+
 const filterLog = () => {
     filtrosAplicados.value = {
         startDate: startDate.value,
         endDate: endDate.value,
         projectId: projectSelectId.value,
+        taskListId: taskListSelectId.value,
         userId: userSelectId.value,
         taskId: taskSelectId.value
     };
 }
 
-const logsTraduzidos = computed(() => {
-  return log.value.map(log => {
-    const proj = project.value.find(p => p.Project_Id === log.Project_Id)
-    const tsk = tasks.value.find(t => t.Task_Id === log.Task_Id)
-    const user = users.value.find(u => u.User_Id === log.User_Id)
-
-    return {
-      ...log,
-      Project_Name: proj ? proj.Name : 'Não encontrado',
-      Task_Name: tsk ? tsk.Name : 'Não encontrada',
-      User_Email: user ? user.Email: 'Não encontrado'
-    }
-  })
-})
-
-// 4. ESSA COMPLEMENTA FILTRANDO OS DADOS TRADUZIDOS
+// --- Lógica de Soma e Tradução (Mantida conforme anterior) ---
 const logsFiltrados = computed(() => {
-    return logsTraduzidos.value.filter(item => {
-        const { startDate, endDate, projectId, userId, taskId } = filtrosAplicados.value;
-        
-        if (startDate && item.Date < startDate) return false;
-        if (endDate && item.Date > endDate) return false;
-        
-        // Usando != em vez de !== para ignorar se um é texto e o outro é número
-        if (projectId && item.Project_Id != projectId) return false;
-        if (userId && item.User_Id != userId) return false;
-        if (taskId && item.Task_Id != taskId) return false;
-        
+    return log.value.map(l => {
+        const p = project.value.find(proj => proj.Project_Id === l.Project_Id);
+        const t = tasks.value.find(tsk => tsk.Task_Id === l.Task_Id);
+        const u = users.value.find(usr => usr.User_Id === l.User_Id);
+        return { 
+            ...l, 
+            Project_Name: p ? p.Name : '-', 
+            Task_Name: t ? t.Name : '-', 
+            User_Email: u ? u.Email : '-' 
+        };
+    }).filter(item => {
+        const f = filtrosAplicados.value;
+        if (f.startDate && item.Date < f.startDate) return false;
+        if (f.endDate && item.Date > f.endDate) return false;
+        if (f.projectId && item.Project_Id != f.projectId) return false;
+        if (f.taskListId && item.TaskList_Id != f.taskListId) return false;
+        if (f.userId && item.User_Id != f.userId) return false;
+        if (f.taskId && item.Task_Id != f.taskId) return false;
         return true;
     });
 });
 
-// 5. FUNÇÕES DE SOMA COMPUTADAS
-const totalHorasNormais = computed(() => {
-    const soma = logsFiltrados.value.reduce((acumulador, log) => {
-        const horas = log.Hours_Worked ? parseFloat(log.Hours_Worked) : 0;
-        return acumulador + horas;
-    }, 0);
-    return soma.toFixed(2);
-});
+const tempoParaMinutos = (t) => {
+    if (!t || !t.includes(':')) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return (h * 60) + m;
+};
 
-const totalHorasExtras = computed(() => {
-    const soma = logsFiltrados.value.reduce((acumulador, log) => {
-        const horas = log.Overtime ? parseFloat(log.Overtime) : 0;
-        return acumulador + horas;
-    }, 0);
-    return soma.toFixed(2);
-});
+const minutosParaTempo = (m) => {
+    return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+};
+
+const totalHorasNormais = computed(() => minutosParaTempo(logsFiltrados.value.reduce((acc, i) => acc + tempoParaMinutos(i.Hours_Worked), 0)));
+const totalHorasExtras = computed(() => minutosParaTempo(logsFiltrados.value.reduce((acc, i) => acc + tempoParaMinutos(i.Overtime), 0)));
 
 </script>
 
 <template>
-    <div>
-        <div>
-            Data inicial <input type="date" v-model="startDate" @change="validarDatas()">
-            Data Final <input type="date" v-model="endDate" :min="startDate">
+    <div class="filtros-container">
+        <div class="campo-grupo datas">
+            <div class="input-individual">
+                <label>Início:</label>
+                <input type="date" v-model="startDate">
+            </div>
+            <div class="input-individual">
+                <label>Fim:</label>
+                <input type="date" v-model="endDate">
+            </div>
         </div>
-        <select v-model="userSelectId">
-            <option :value="null">Todos os Usuários</option>
-            <option v-for="user in users" :key="user.User_Id" :value="user.User_Id">
-                {{ user.Email }}
-            </option>
-        </select>
-        
-        <select v-model="projectSelectId">
-            <option :value="null">Todos os Projetos</option>
-            <option v-for="proj in project" :key="proj.Project_Id" :value="proj.Project_Id">
-                {{ proj.Name }}
-            </option>
-        </select>
 
-        <select v-model="taskSelectId">
-            <option :value="null">Todas as tarefas</option>
-            <option v-for="task in tasks" :key="task.Task_Id" :value="task.Task_Id">
-                {{ task.Name }}
-            </option>
-        </select>
+        <div class="campo-grupo selects">
+            <div class="input-individual">
+                <label>Usuário:</label>
+                <select v-model="userSelectId">
+                    <option :value="null">Todos</option>
+                    <option v-for="u in users" :key="u.User_Id" :value="u.User_Id">{{ u.Email }}</option>
+                </select>
+            </div>
+            
+            <div class="input-individual">
+                <label>Projeto:</label>
+                <select v-model="projectSelectId">
+                    <option :value="null">Todos</option>
+                    <option v-for="p in project" :key="p.Project_Id" :value="p.Project_Id">{{ p.Name }}</option>
+                </select>
+            </div>
+
+            <div class="input-individual">
+                <label>TaskList:</label>
+                <select v-model="taskListSelectId" :disabled="!projectSelectId">
+                    <option :value="null">Todas</option>
+                    <option v-for="l in taskList" :key="l.TaskList_Id" :value="l.TaskList_Id">{{ l.Name }}</option>
+                </select>
+            </div>
+
+            <div class="input-individual">
+                <label>Tarefa:</label>
+                <select v-model="taskSelectId">
+                    <option :value="null">Todas</option>
+                    <option v-for="t in tasks" :key="t.Task_Id" :value="t.Task_Id">{{ t.Name }}</option>
+                </select>
+            </div>
+        </div>
         
-        <button @click="filterLog">Filtrar</button>
+        <div class="acoes-container">
+            <button class="btn-filtrar" @click="filterLog">🔍 Filtrar</button>
+        </div>
     </div>
-    <br>
-    <div>
-        <h3>List TimeLog:</h3>
+
+    <div class="tabela-container">
         <table>
             <thead>
                 <tr>
-                    <th>Email:</th>
-                    <th>Data:</th>
-                    <th>Projeto:</th>
-                    <th>Task:</th>
-                    <th>Horas trabalhadas:</th>
-                    <th>Horas extra:</th>
+                    <th>Email</th>
+                    <th>Data</th>
+                    <th>Projeto</th>
+                    <th>Task</th>
+                    <th>Horas</th>
+                    <th>Extra</th>
                 </tr>
             </thead>
-            
             <tbody>
                 <tr v-for="log in logsFiltrados" :key="log.TimeLog_Id">
                     <td>{{ log.User_Email }}</td>
@@ -195,10 +216,9 @@ const totalHorasExtras = computed(() => {
                     <td>{{ log.Overtime }}</td>
                 </tr>
             </tbody>
-
             <tfoot>
-                <tr style="font-weight: bold; background-color: #f0f0f0;">
-                    <td colspan="4" style="text-align: right;">Total:</td>
+                <tr class="total-linha">
+                    <td colspan="4">Total Acumulado:</td>
                     <td>{{ totalHorasNormais }}</td>
                     <td>{{ totalHorasExtras }}</td>
                 </tr>
@@ -207,14 +227,27 @@ const totalHorasExtras = computed(() => {
     </div>
 </template>
 
-<style>
-td, th {
-    padding: 5px;
-    border-style: solid;
-    border-width: 1px;
-    text-align: left;
+<style scoped>
+.filtros-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
-th {
-    background-color: #e9e9e9;
+.campo-grupo { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+.input-individual { display: flex; flex-direction: column; flex: 1; min-width: 130px; }
+.input-individual label { font-size: 0.75rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+.input-individual input, .input-individual select { 
+    height: 35px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0 8px; font-size: 0.85rem; 
 }
+.btn-filtrar { height: 35px; padding: 0 15px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.tabela-container { margin-top: 20px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 0.85rem; }
+th { background: #f1f5f9; }
+.total-linha { background: #f8fafc; font-weight: bold; }
 </style>

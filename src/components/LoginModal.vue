@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, getCurrentInstance } from 'vue';
 
 // Define o que o modal recebe e o que ele avisa ao pai
 const props = defineProps(['modelValue']); // v-model para abrir/fechar
@@ -9,9 +9,12 @@ const email = ref('');
 const password = ref('');
 const erro = ref('');
 
+const app = getCurrentInstance()
+const API_URL = app.appContext.config.globalProperties.$API_URL;
+
 const realizarLogin = async () => {
   try {
-    const res = await fetch('http://127.0.0.1:8000/session/', {
+    const res = await fetch(`${API_URL}/session/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ Email: email.value, Password: password.value })
