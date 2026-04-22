@@ -227,8 +227,8 @@ const logsAgrupados = computed(() => {
 
 <template>
     <div class="caixa-com-scroll">
-        <div v-for="(dados, data) in logsAgrupados" :key="data" class="dia-section">
-            <div class="dia-header">
+        <div v-for="(dados, data) in logsAgrupados" :key="data" class="div-section">
+            <div class="div-header">
                 <span>📅 Data: {{ data }}</span>
                 <span class="total-badge">Total: {{ paraTexto(dados.totalMinutos) }}h</span>
             </div>
@@ -251,74 +251,110 @@ const logsAgrupados = computed(() => {
 
     <hr v-if="logs.length > 0">
     <br>
-    
     <div class="container">
-        <h4 class="container-item">Data:</h4>  
-        <h4 class="container-item">Projeto:</h4> 
-        <h4 class="container-item">TaskList:</h4> 
-        <h4 class="container-item">Task:</h4> 
-        <h4 class="container-item">SubTask:</h4> 
-        <h4 class="container-item">Horas trabalhadas:</h4> 
-        <h4 class="container-item">Horas extras:</h4>
-        <h4 class="container-item">Descrição:</h4>
-    </div>
-    
-    <div class="container">
-        <input class="container-item" type="date" v-model="Date" required>
-        
-        <select class="container-item" v-model="projetoSelecionadoId" required>
-            <option :value="null">Selecione...</option>
-            <option v-for="project in projects" :key="project.Project_Id" :value="project.Project_Id">
-                {{ project.Name }}
-            </option>
-        </select>   
-        
-        <select class="container-item" v-model="taskListSelecionadoId">
-            <option :value="null">Selecione...</option>
-            <option v-for="list in taskList" :key="list.TaskList_Id" :value="list.TaskList_Id">
-                {{ list.Name }}
-            </option>
-        </select>
-        
-        <select class="container-item" v-model="taskSelecionadoId" required>
-            <option :value="null">Selecione...</option>
-            <option v-for="task in tasks" :key="task.Task_Id" :value="task.Task_Id">
-                {{ task.Name }}
-            </option>
-        </select>
+        <div class="flex-container">
+            <h4 class="container-item">Data:</h4>  
+            <input class="container-item" type="date" v-model="Date" required>
+        </div>
 
-        <select class="container-item" v-model="subTaskSelecionadoId">
-            <option :value="null">Selecione...</option>
-            <option v-for="sub in subTask" :key="sub.SubTask_Id" :value="sub.SubTask_Id">
-                {{ sub.Name }}
-            </option>
-        </select>
+        <div class="flex-container">
+            <h4 class="container-item">Projeto:</h4> 
+            <select class="container-item" v-model="projetoSelecionadoId" required>
+                <option :value="null">Selecione...</option>
+                <option v-for="project in projects" :key="project.Project_Id" :value="project.Project_Id">
+                    {{ project.Name }}
+                </option>
+            </select>   
+        </div>
 
-        <input class="container-item" type="time" v-model="Hours_Worked" required>
-        <input class="container-item" type="time" v-model="Overtime">
-        <input class="container-item" type="text" v-model="Description" placeholder="Opcional">
+        <div class="flex-container">
+            <h4 class="container-item">TaskList:</h4>
+                    <select class="container-item" v-model="taskListSelecionadoId">
+                <option :value="null">Selecione...</option>
+                <option v-for="list in taskList" :key="list.TaskList_Id" :value="list.TaskList_Id">
+                    {{ list.Name }}
+                </option>
+            </select>
+        </div>
+
+        <div class="flex-container">
+            <h4 class="container-item">Task:</h4> 
+            <select class="container-item" v-model="taskSelecionadoId" required>
+                <option :value="null">Selecione...</option>
+                <option v-for="task in tasks" :key="task.Task_Id" :value="task.Task_Id">
+                    {{ task.Name }}
+                </option>
+            </select>
+        </div>
+
+        <div class="flex-container">
+            <h4 class="container-item">SubTask:</h4> 
+            <select class="container-item" v-model="subTaskSelecionadoId">
+                <option :value="null">Selecione...</option>
+                <option v-for="sub in subTask" :key="sub.SubTask_Id" :value="sub.SubTask_Id">
+                    {{ sub.Name }}
+                </option>
+            </select>
+        </div>
+
+        <div class="flex-container">
+            <h4 class="container-item">Horas trabalhadas:</h4> 
+            <input class="container-item" type="time" v-model="Hours_Worked" required>
+        </div>
+
+        <div class="flex-container">
+            <h4 class="container-item">Horas extras:</h4>
+                <input class="container-item" type="time" v-model="Overtime">
+        </div>
+
+        <div class="flex-container">
+            <h4 class="container-item">Descrição:</h4>
+            <input class="container-item" type="text" v-model="Description" placeholder="Opcional">
+        </div>
         
-        <button @click="addLog">Enviar</button>
+        <div class="flex-container" >
+            <button class="btn-enviar-log" @click="addLog">Enviar</button>
+        </div>
     </div>
 </template>
 
 <style>
 /* Seus estilos originais mantidos */
 .container{
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+}
+
+.flex-container{
+    display: flex;
+    flex-direction: column;
+    margin-right: 5px;
 }
 .container-item {
     padding: 10px;
     text-align: left;
+    min-height: 50px;
 }
-.dia-section {
+.btn-enviar-log{
+    background-color: #2ecc71;
+    border: none;
+    color: #ffffff;
+    font-size: 0.9rem;
+    margin: 5px;
+    padding: 12px;
+    border-radius: 10%;
+}
+.btn-enviar-log:hover{
+    background-color: #1f8f4d;
+}
+.div-section {
     margin-bottom: 2rem;
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
 }
-.dia-header {
+.div-header {
     background-color: #f4f4f4;
     padding: 10px 15px;
     display: flex;
