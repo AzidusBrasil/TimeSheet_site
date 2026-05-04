@@ -143,7 +143,8 @@ const getTaskName = (taskId) => {
 
 // Função para ADD LOG
 const addLog = async () => {
-    if (!Date.value || !projetoSelecionadoId.value || !taskSelecionadoId.value || !Hours_Worked.value){
+    //if (!Date.value || !projetoSelecionadoId.value || !taskSelecionadoId.value || !Hours_Worked.value){
+    if (!Date.value || !projetoSelecionadoId.value || !Hours_Worked.value){
         alert("Preencha os campos obrigatórios");
         return;
     };
