@@ -1,5 +1,6 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted, computed, watch } from 'vue';
+import Paginator from './Paginator.vue';
 
 const log = ref([]);
 const project = ref([]);
@@ -31,7 +32,7 @@ const API_URL = app.appContext.config.globalProperties.$API_URL;
 // --- Chamadas de API ---
 const getTimeLog = async() => {
     try {
-        const res = await fetch(`${API_URL}/TimeLog/`);
+        const res = await fetch(`${API_URL}/TimeLog/?order=desc&limit=650`);
         if (res.ok) log.value = await res.json();
     } catch(error) { console.error("Erro logs:", error) }
 }
@@ -225,10 +226,14 @@ const totalHorasExtras = computed(() => minutosParaTempo(logsFiltrados.value.red
             </tfoot>
         </table>
     </div>
+    <!-- <div>
+        <Paginator/>
+    </div> -->
 </template>
 
 <style scoped>
 .filtros-container {
+    margin-top: 40px;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;

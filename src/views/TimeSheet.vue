@@ -30,7 +30,7 @@ const userId = localStorage.getItem('userId');
 // Função para Carregar LOGs
 const carregaLog = async() =>{
     try{
-        const res = await fetch(`${API_URL}/TimeLog/${userId}`);
+        const res = await fetch(`${API_URL}/TimeLog/${userId}/?order=desc`);
         if (res.ok) {
             logs.value = await res.json();
         }
@@ -253,12 +253,12 @@ const logsAgrupados = computed(() => {
     <hr v-if="logs.length > 0">
     <br>
     <div class="container">
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Data:</h4>  
             <input class="container-item" type="date" v-model="Date" required>
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Projeto:</h4> 
             <select class="container-item" v-model="projetoSelecionadoId" required>
                 <option :value="null">Selecione...</option>
@@ -268,7 +268,7 @@ const logsAgrupados = computed(() => {
             </select>   
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">TaskList:</h4>
                     <select class="container-item" v-model="taskListSelecionadoId">
                 <option :value="null">Selecione...</option>
@@ -278,7 +278,7 @@ const logsAgrupados = computed(() => {
             </select>
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Task:</h4> 
             <select class="container-item" v-model="taskSelecionadoId" required>
                 <option :value="null">Selecione...</option>
@@ -288,7 +288,7 @@ const logsAgrupados = computed(() => {
             </select>
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">SubTask:</h4> 
             <select class="container-item" v-model="subTaskSelecionadoId">
                 <option :value="null">Selecione...</option>
@@ -298,22 +298,22 @@ const logsAgrupados = computed(() => {
             </select>
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Horas trabalhadas:</h4> 
             <input class="container-item" type="time" v-model="Hours_Worked" required>
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Horas extras:</h4>
                 <input class="container-item" type="time" v-model="Overtime">
         </div>
 
-        <div class="flex-container">
+        <div class="flex-container-col">
             <h4 class="container-item">Descrição:</h4>
             <input class="container-item" type="text" v-model="Description" placeholder="Opcional">
         </div>
         
-        <div class="flex-container" >
+        <div class="flex-container-col" >
             <button class="btn-enviar-log" @click="addLog">Enviar</button>
         </div>
     </div>
@@ -327,7 +327,7 @@ const logsAgrupados = computed(() => {
     align-items: end;
 }
 
-.flex-container{
+.flex-container-col{
     display: flex;
     flex-direction: column;
     margin-right: 5px;

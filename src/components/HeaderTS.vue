@@ -2,7 +2,6 @@
 import { useRouter } from 'vue-router'
 // Inicializa o roteador do Vue
 const router = useRouter()
-
 </script>
 
 <template>
@@ -13,8 +12,8 @@ const router = useRouter()
         <div >
             <ul class="nav-links">
                 <router-link class="nav-links-item" to="/">TimeSheet</router-link>
-                <router-link class="nav-links-item" to="/graficos">Graficos</router-link>
-                <!-- <router-link class="nav-links-item" to="admin">Admin</router-link> -->
+                <router-link class="nav-links-item" to="/Graficos">Graficos</router-link>
+                <router-link class="nav-links-item" to="/User">User</router-link>
             </ul>
         </div>
     </nav>
