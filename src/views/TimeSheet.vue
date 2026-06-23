@@ -30,7 +30,7 @@ const userId = localStorage.getItem('userId');
 // Função para Carregar LOGs
 const carregaLog = async() =>{
     try{
-        const res = await fetch(`${API_URL}/TimeLog/${userId}/?order=desc`);
+        const res = await fetch(`${API_URL}/TimeLog/${userId}/?limit=650`);
         if (res.ok) {
             logs.value = await res.json();
         }
